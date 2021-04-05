@@ -1,4 +1,4 @@
-class adam:
+class initial:
     """연습용 클래스"""
     def __init__(self):
         """생성자 함수"""
