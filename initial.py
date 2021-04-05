@@ -22,6 +22,6 @@ class initial:
                 ret = x[i]
         return ret
     
-    a = adam()
+    a = initial()
     print('sum_two() result = '. a.sum_two(1, 3))
     print('get_biggest() result = ', a.get_biggest([5, 3, 4, -10, 0]))
