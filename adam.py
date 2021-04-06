@@ -1,4 +1,4 @@
-class initial:
+class adam:
     """연습용 클래스"""
     def __init__(self):
         """생성자 함수"""
@@ -22,6 +22,6 @@ class initial:
                 ret = x[i]
         return ret
     
-    a = initial()
+    a = adam()
     print('sum_two() result = '. a.sum_two(1, 3))
     print('get_biggest() result = ', a.get_biggest([5, 3, 4, -10, 0]))
