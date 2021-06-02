@@ -24,11 +24,11 @@ col_book = db[cfg['db']['col_book']]
 col_tag = db[cfg['db']['col_tag']]
 
 def crawl_book(logger, startPage=1, endPage=5, s_type="best"):
-    """Collect data from www.yes24.com and store it to Book Collection
+    """Collect data from www.yes24.com
     
     :param logger: logger instance
     :type logger: logging.Logger
-    :param startPage: start page of crawling (default 1)
+    :param startPage: start page of crawling (default 1, 1 page contains 40 book list)
     :type startPage: int
     :param endPage: last page of crawling (default 5)
     :type endPage: int
@@ -40,14 +40,14 @@ def crawl_book(logger, startPage=1, endPage=5, s_type="best"):
    
     s_type = "04" if s_type == "new" else "05"
     country = 1 # book country code (1~10)
+    c_category = ['한국', '영미', '일본', '중국', '프랑스', '독일', '러시아', '스페인, 중남미', '북유럽']
     del_pattern = "\(.*\)|\s-\s.*" # delete pattern in book name(title)
-
+    
     book_info = {}
     n_got = 0
-
-    #while country < 2: #test ver
+    
     while country < 11:
-        logger.info('Starting crawl coutry category -- {}/10'.format(country))
+        logger.info('Starting crawl {}소설 -- {}/10 '.format(c_category[country], country))
 
         for page_num in tqdm(range(startPage, endPage + 1)):
             root_url = ("http://www.yes24.com/24/Category/Display/0010010460%02d" % country) + \
@@ -64,8 +64,7 @@ def crawl_book(logger, startPage=1, endPage=5, s_type="best"):
             for index in range(len(book_list)):
                 if not book_list[index].text:
                     continue
-
-               # name = book_list[index].text
+                
                 name = re.sub(del_pattern, '', book_list[index].text).strip()
                 href = book_list[index]['href']
                 info_url = "http://www.yes24.com/" + href
@@ -94,29 +93,28 @@ def crawl_book(logger, startPage=1, endPage=5, s_type="best"):
                     p_review = soup_.select('#infoset_pubReivew > div.infoSetCont_wrap > div.infoWrap_txt')[0].text
                 except: p_review = ' '
 
-                #logger.info('{} -- Add book count'.format(n_got))
                 book_info[name + '_' + author] = {"p_date": p_date, "intro": intro, "p_review": p_review}
                 n_got += 1
             
         country += 1
     
-    logger.info('{} items collected.'.format(n_got))
-    logger.info('[crawling] save dict -- {}'.format(len(book_info.keys())))
+    logger.info('Collect {} Book information in all country categories'.format(len(book_info.keys())))
     return book_info
 
 
 def create_tag(book_info, logger, using='mecab'):
-    """Create tags using frequency analysis
+    """Create tags using 'intro'+'p_review' of crawl_book() output 
     
-    :param book_intro: pairs of {'book name_author': {"intro": "...", "p_review": "..."}}
-    :type s_type: dict
+    :param book_info: pairs of {'book name_author': {"p_date": "...", "intro": "...", "p_review": "..."}}
+    :type book_info: dict
     :param logger: logger instance
     :type logger: logging.Logger
-    :param using: use konlpy.tag  choice=['mecab', 'hannanum', 'okt']
+    :param using: use konlpy.tag name, choice=['mecab', 'hannanum', 'okt']
     :type using: str 
-    :return: pairs of {"book_name": tag list}
+    :return: pairs of {"book name_author": ["tag1", "tag2", ...]}
     :rtype: dict
     """  
+    logger.info('Get {} book info'.format(len(book_info.keys())))
     book_tag = {}
 
     if using == 'mecab':
@@ -126,10 +124,7 @@ def create_tag(book_info, logger, using='mecab'):
     else:
         using = Okt()
     
-    get_book = len(book_info.keys())
-    logger.info('[create_tag] get book -- {}'.format(get_book))
-
-    n_tag = 0
+    n_book = 0
     for k, v in book_info.items():
         book_info = v['intro'] + v['p_review']
         
@@ -139,13 +134,7 @@ def create_tag(book_info, logger, using='mecab'):
         data_nouns = using.nouns(cleans)  
         
         frequency = collections.Counter(data_nouns)
-        '''
-        # create threshold on frequency
-        temp = set([int(v) for k, v in frequency.items()]) #) if v > 1])
-        #threshold = np.median(list(temp))
-        threshold = np.mean(list(temp))
-        '''
-        ## 시도2 top 10개 뽑기
+        # extract tags
         temp = [int(f_v) for f_v in frequency.values()]
         if len(temp) >= 10:
             temp.sort(reverse=True)
@@ -155,9 +144,9 @@ def create_tag(book_info, logger, using='mecab'):
         tags = [f_k for f_k, f_v in frequency.items() if f_v >= threshold]
         
         book_tag[k] = tags
-        n_tag += 1
+        n_book += 1
 
-    logger.info('save tag in DB -- {}'.format(n_tag))
+    logger.info('Create tags of {} books'.format(n_book))
     return book_tag
      
     
