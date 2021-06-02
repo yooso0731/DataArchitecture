@@ -1,7 +1,7 @@
 # DataArchitecture
 
+- 환경변수 설정
 ```
-# 환경변수 설정
 vi ~/.bashrc file   
 i (edit mode)
 
