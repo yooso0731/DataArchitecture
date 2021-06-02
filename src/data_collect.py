@@ -151,18 +151,13 @@ def create_tag(book_info, logger, using='mecab'):
      
     
 def save_to_Book(book_info, logger):
-    """Save the given {book name_author: {book info}} pairs
+    """Save the given book info in Book Collection
     
     :param book_info: {book name_author: {book info}} pairs
     :type book_info: dict
     :param logger: logger instance
     :type logger: logging.Logger
     """
-    get_book = len(book_info.keys())
-    logger.info('[save_to_Book] get book info -- {}'.format(get_book))
-
-    save_book = 0
-    skip_book = 0
     for book in book_info.keys():
         # Insert the book information data if not exists.
         name, author = book.split('_')
@@ -171,24 +166,24 @@ def save_to_Book(book_info, logger):
             continue
 
         doc_book = col_book.find_one({"name":name, "author":author})
-        if not doc_book:    
-            
+        if not doc_book:   
             col_book.insert_one({
                 "name": name, "author": author, 
                 "p_date": book_info[book]["p_date"], "intro": book_info[book]["intro"]
-            })
-            
-           # book_id = col_book.find_one({"name": name, "author": author})
-           # col_tag.insert_one({"Book": book_id, "tags": ["tags"]})
-           # logger.info('[Book: {}, author: {}] add in Book Collection'.format(name, author))
-            save_book += 1
+            }
+           logger.info('[Book: {}, author: {}] add in Book Collection'.format(name, author))
         else:
-           # logger.info('[Book: {}, author: {}] already exist, so skipped'.format(name, author))
-            skip_book += 1
-    logger.info('DB save -- {}, skip -- {}'.format(save_book, skip_book))
+           logger.info('[Book: {}, author: {}] already exist, so skipped'.format(name, author))
 
+                
 def save_to_Tag(tag_data, logger):
+    """Save the given book tags in Tag Collection
     
+    :param book_info: {book name_author: [tags]} pairs
+    :type book_info: dict
+    :param logger: logger instance
+    :type logger: logging.Logger
+    """
     for book, tags in tag_data.items():
         name, author = book.split('_')
         
@@ -199,25 +194,26 @@ def save_to_Tag(tag_data, logger):
         
         if not doc_tag:
             col_tag.insert_one({"Book": doc_book['_id'], "tags": tags})
-        
-            logger.info('[Book: {}, Tag {}개] in Tag Collection'.format(doc_book['_id'], len(tags)))
+            logger.info('[Book: {}, {} tags] in Tag Collection'.format(doc_book['_id'], len(tags)))
         else:
             col_tag.update_one({"Book": doc_book['_id']},
                     {"$set": 
                         {"tags": tags}
                         })
-            #logger.info('[Book: {}] already exist, so skipped'.format(doc_book['_id']))
-            logger.info('[Book: {}, Tag: {}개] Update'.format(doc_book['_id'], len(tags)))
+            logger.info('[Book: {}, {} tags] Update'.format(doc_book['_id'], len(tags)))
 
-def show_DB(logger, limit=10):
-    """Show book info data in Book Collection.
+                
+def show_DB(logger, limit=5):
+    """Show book data in Book and Tag Collection.
     
     :param logger: logger instance
     :type logger: logging.Logger
     :param limit: maximum # of items to show (default 10)
     :type limit: int
     """
-    for i, b in enumerate(col_tag.find({})):
+    for i, b in enumerate(col_book.find({})):
         if i == limit:
             break
-        logger.info('Tag: {} -{}'.format(b['Book'], b['tags']))
+        tags = col_tag.find_one({"Book": b["_id"]})["tags"]
+        logger.info('Book: {}, author: {}, tags: {}'.format(b['name'], b['author'], tags))
+        
