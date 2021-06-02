@@ -1,8 +1,10 @@
 # DataArchitecture
 
--vi ~/.bashrc file
+vi ~/.bashrc file   
 i (edict mode)
+```
 export RECOMMEND_SERVER=~/DataArchitecture
 export PYTHONPATH=$PATHONPATH:$RECOMMEND_SERVER
-ESC
+```
+ESC   
 :wq! (저장 후 종료)
