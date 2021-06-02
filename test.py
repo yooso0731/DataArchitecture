@@ -37,7 +37,7 @@ def test_data_collection(logger):
     collected_data = data_collect.crawl_book(logger, startPage = 1, endPage = 1)
     logger.info('Total -- {} data collected.'.format(len(collected_data)))
     
-    tag_data = data_collect.create_tag(collected_data, logger)
+    tag_data = data_collect.create_tag(collected_data, logger, using='hannanum')
     
     if not collected_data:
         return False
