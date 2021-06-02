@@ -2,11 +2,8 @@ import sys
 import os
 import pdb
 
-from src import mylogger
-
 def test_logger():
     """Test logger.
-
     :return: test result.
     :rtypt: bool
     """
@@ -21,7 +18,6 @@ def test_logger():
 
 def test_config():
     """Test config.
-
     :return: test result
     :rtype: bool
     """
@@ -38,9 +34,14 @@ def test_config():
 
 from src import data_collect
 def test_data_collection(logger):
-    collected_data = data_collect.crawl_book(logger, startPage=1, endPage=1)
-    #logger.info('{} data collected.'.format(len(collected_data)))
+    collected_data = data_collect.crawl_book(logger, startPage = 1, endPage = 1)
+    logger.info('Total -- {} data collected.'.format(len(collected_data)))
+    
+    tag_data = data_collect.create_tag(collected_data, logger)
+    
     if not collected_data:
+        return False
+    if not tag_data:
         return False
     # show some items
     '''
@@ -49,9 +50,7 @@ def test_data_collection(logger):
         if i >= 10:
             break
     '''
-
-    all_data = data_collect.create_tag(collected_data, logger)
-    logger.info(all_data.keys())
+    
     #for k, v in tag_dict.items():
     #    collected_data[k]['book_tag'] = v['tag']
     
@@ -59,9 +58,10 @@ def test_data_collection(logger):
     #data_collect.show_col(logger)
     #logger.info('--------------------------------')
        # logger.info(all_data.values())
-    data_collect.save_to_col(all_data, logger)
-    logger.info('DB status (AFTER saving to Collection)')
-    data_collect.show_col(logger)
+    data_collect.save_to_Book(collected_data, logger)
+    data_collect.save_to_Tag(tag_data, logger)    
+    #logger.info('DB status (AFTER saving to Collection)')
+    #data_collect.show_col(logger)
     return True
 
 
