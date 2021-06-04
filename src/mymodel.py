@@ -6,58 +6,57 @@ import pdb
 import os
 
 class model1:
-    """Model for service 1 (recommend book <-- Calculate Jaccard similarity)
+    """Model for service1
     """
-    def compute_similarity(self, data, logger, N=5):
-        """Compute Jaccard Similarity values between books and get ranked list of the most similar books
+    def compute_similarity(self, data, logger, N):
+        """Compute Jaccard Similarities between books, and return topN books
 
-        :param data: dictionary of book tags {book id: [tag1, tag2, ...]}
+        :param data: dictionary of book tags {book id: [tag1, tag2, ...], ...}
         :type data: dict
         :param logger: logger instance
         :type logger: logging.Logger
-        :param N: # of saving similar book (default 5)
+        :param N: # of saving similar book
         :type N: int
-        :return: dictionary of book tags Top5 {book_id: [(similar book_id, score, [same tag list]), ...]}
+        :return: dictionary of book tags TopN {book_id: [(similar book_id, score, [same tag list]), ...]}
         :rtype: dict
         """
-        # compute similarity & save 5 similar book
+        # compute similarities
         total_sim = {}
+        
         book_ids = list(data.keys())
         for i in range(0, len(book_ids)):
             tag1 = list(data.values())[i]
             sim_score = []
-            for ii in range(len(book_ids)):
-                if i == ii:
+            
+            for ii in range(0, len(book_ids)):
+                if i == ii: # if book same
                     continue
                 tag2 = list(data.values())[ii]
+                
                 if len(tag1) == 0 | len(tag2) == 0:
                     continue
 
-                # compute jaccard similarity
-                intersection = list(set(tag1).intersection(set(tag2)))
+                intersection = list(set(tag1).intersection(set(tag2))) # list of same tags
                 union = (len(tag1) + len(tag2)) - len(intersection)
-                if len(intersection) == 0:
+                if len(intersection) == 0: # if similarity == 0
                     continue
-
-                score = float(len(intersection) / union)
                 
-                logger.info('{}-{}: {}'.format(tag1, tag2, intersection))
-
+                score = float(len(intersection) / union)
                 sim_score.append((book_ids[ii], score, intersection))
 
             sim_score.sort(key = lambda x: -x[1])
             total_sim[book_ids[i]] = sim_score[0:N]
+            logger.info('Finish computing similarities of Book ID: {}'.format(book_ids[i]))
+            
         return total_sim
 
 
 def run_model1(logger, N=5):
-    """Run model 1 -- save to RecommendList Collection
+    """Run model1 
         
-    :param data: dict of simiar book & tag {'book_id': [('sim_book_id', score, [tags]), ... ]}
-    :type data: dict
     :param logger: logger instance
     :type logger: logging.Logger
-    :param N: # of saving similar book
+    :param N: # of saving similar book  (default 5)
     :type N: int
     """
     project_root_path = os.getenv("RECOMMEND_SERVER")
@@ -72,7 +71,7 @@ def run_model1(logger, N=5):
     col_tag = db[cfg['db']['col_tag']]
     col_recommend = db[cfg['db']['col_recommend']]
     
-    #prepare data & preprocesse
+    #prepare data
     doc_tags = col_tag.find()
     input_data = {}
     for doc_tag in doc_tags:
