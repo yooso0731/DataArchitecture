@@ -34,10 +34,10 @@ def test_config():
 
 from src import data_collect
 def test_data_collection(logger):
-    collected_data = data_collect.crawl_book(logger, startPage = 1, endPage = 1)
+    collected_data = data_collect.crawl_book(logger)
     logger.info('Total -- {} data collected.'.format(len(collected_data)))
     
-    tag_data = data_collect.create_tag(collected_data, logger, using='hannanum')
+    tag_data = data_collect.create_tag(collected_data, logger, using='mecab')
     
     if not collected_data:
         return False
@@ -64,6 +64,11 @@ def test_data_collection(logger):
     #data_collect.show_col(logger)
     return True
 
+def test_model(logger):
+    from src import mymodel
+    mymodel.run_model1(logger)
+    logger.info('Finish inserting similar book') 
+
 
 if __name__ == '__main__':
     target_step = []
@@ -87,4 +92,13 @@ if __name__ == '__main__':
         if not ret:
             raise Exception('Error when test_data_collection')
         print('Success - test_collection')
+    '''
+    if not target_step or 'show' in target_step:
+        show_DB(logger)
+        print('Success - test_showDB')
+   '''
+    if not target_step or 'model' in target_step:
+       test_model(logger)
+       print('Success - test_model')
+
     print('Test completed.')

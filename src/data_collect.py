@@ -40,14 +40,14 @@ def crawl_book(logger, startPage=1, endPage=5, s_type="best"):
    
     s_type = "04" if s_type == "new" else "05"
     country = 1 # book country code (1~10)
-    c_category = ['한국', '영미', '일본', '중국', '프랑스', '독일', '러시아', '스페인, 중남미', '북유럽']
+    c_category = ['한국', '영미', '일본', '중국', '프랑스', '독일', '러시아', '스페인, 중남미', '북유럽', 'etc']
     del_pattern = "\(.*\)|\s-\s.*" # delete pattern in book name(title)
     
     book_info = {}
     n_got = 0
     
     while country < 11:
-        logger.info('Starting crawl {}소설 -- {}/10 '.format(c_category[country], country))
+        logger.info('Starting crawl {}소설 -- {}/10 '.format(c_category[country-1], country))
 
         for page_num in tqdm(range(startPage, endPage + 1)):
             root_url = ("http://www.yes24.com/24/Category/Display/0010010460%02d" % country) + \
@@ -170,10 +170,10 @@ def save_to_Book(book_info, logger):
             col_book.insert_one({
                 "name": name, "author": author, 
                 "p_date": book_info[book]["p_date"], "intro": book_info[book]["intro"]
-            }
-           logger.info('[Book: {}, author: {}] add in Book Collection'.format(name, author))
+                })
+            logger.info('[Book: {}, author: {}] add in Book Collection'.format(name, author))
         else:
-           logger.info('[Book: {}, author: {}] already exist, so skipped'.format(name, author))
+            logger.info('[Book: {}, author: {}] already exist, so skipped'.format(name, author))
 
                 
 def save_to_Tag(tag_data, logger):
@@ -202,7 +202,7 @@ def save_to_Tag(tag_data, logger):
                         })
             logger.info('[Book: {}, {} tags] Update'.format(doc_book['_id'], len(tags)))
 
-                
+'''                
 def show_DB(logger, limit=5):
     """Show book data in Book and Tag Collection.
     
@@ -214,6 +214,8 @@ def show_DB(logger, limit=5):
     for i, b in enumerate(col_book.find({})):
         if i == limit:
             break
-        tags = col_tag.find_one({"Book": b["_id"]})["tags"]
-        logger.info('Book: {}, author: {}, tags: {}'.format(b['name'], b['author'], tags))
-        
+        logger.info(b)
+        #tags = col_tag.find_one({"Book": b["_id"]})["tags"]
+        #logger.info('Book: {}, author: {}, tags: {}'.format(b['name'], b['author'], tags))
+   
+'''
