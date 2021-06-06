@@ -24,26 +24,25 @@ class model1:
         total_sim = {}
         
         book_ids = list(data.keys())
+        book_tags = list(data.values())
         for i in range(0, len(book_ids)):
-            tag1 = list(data.values())[i]
             sim_score = []
-            
             for ii in range(0, len(book_ids)):
-                if i == ii: # if book same
-                    continue
-                tag2 = list(data.values())[ii]
+                if i == ii: continue
+                total_score = 0
+                sum_score = 0
+                logger.info(book_tags[ii])
+                compare_tags = [tag for (tag, score) in book_tags[ii]]
+                intersection = []
+                for (tag, score) in book_tags[i]:
+                    intersection.append(tag)
+                    total_score += score
+                    if tag in compare_tags:
+                        sum_score += score
+                        
+                sim = float(sum_score / total_score)
+                sim_score.append((book_ids[ii], sim, intersection))
                 
-                if len(tag1) == 0 | len(tag2) == 0:
-                    continue
-
-                intersection = list(set(tag1).intersection(set(tag2))) # list of same tags
-                union = (len(tag1) + len(tag2)) - len(intersection)
-                if len(intersection) == 0: # if similarity == 0
-                    continue
-                
-                score = float(len(intersection) / union)
-                sim_score.append((book_ids[ii], score, intersection))
-
             sim_score.sort(key = lambda x: -x[1])
             total_sim[book_ids[i]] = sim_score[0:N]
             logger.info('Finish computing similarities of Book ID: {}'.format(book_ids[i]))
@@ -69,6 +68,7 @@ def run_model1(logger, N=5):
     db = db_client[db_name]
     
     col_tag = db[cfg['db']['col_tag']]
+    col_book = db[cfg['db']['col_book']]
     col_recommend = db[cfg['db']['col_recommend']]
     
     #prepare data
@@ -79,31 +79,78 @@ def run_model1(logger, N=5):
     
     # run model1
     m1 = model1()
-    data = m1.compute_similarity(input_data, logger)
+    data = m1.compute_similarity(input_data, logger, N)
     
     for book_id, value in data.items():
         doc_recommend = col_recommend.find_one({"Book": book_id})
+        
         if not doc_recommend:
             col_recommend.insert_one(
             {"Book": book_id, "similar_list": []})
             logger.info('Book Id: {} -- Start adding similar book'.format(book_id))
             for sim_book_id, score, tags in value:
+                doc_book = col_book.find_one({"_id": sim_book_id}) # name, author
                 col_recommend.update_one(
                         {"Book": book_id},
                         {"$push": {"similar_list": {
-                            "book": sim_book_id,
-                            "score": score, "tags": tags}}})
+                            "name": doc_book["name"],
+                            "author": doc_book["author"],
+                            "score": score, 
+                            "tags": tags}}})
                 logger.info('new similar book {}, score: {}'.format(sim_book_id, score))
-        '''
+        
         else:
             logger.info('Book Id: {} -- Start changing similar book'.format(book_id))
             for sim_book_id, score, tags in value:
+                doc_book = col_book.find_one({"_id": sim_book_id}) # name, author
                 col_recommend.update_one(
                 {"Book": book_id},
-                {"$set": { "similar_list": {"book": sim_book_id, "score": score, "tags": tags}}
-                }
-             )
+                {"$set": {"similar_list": {
+                            "name": doc_book["name"],
+                            "author": doc_book["author"],
+                            "score": score, 
+                            "tags": tags}}})
                 logger.info('new similar book {}, score: {}'.format(book_id, sim_book_id, score))
-        '''
+        
     db_client.close()
 
+
+def get_service1_result(book_name, author, logger):
+    """Get stuff for service 1
+
+    :param book_name: book name for search similar book
+    :type book_name: str
+    :param author: book author for search similar book
+    :type author: str
+    :param logger: logger instance
+    :type logger: logging.Logger
+    :return: {book_id: [{sim_book_id: _, score: _, tags: []}]}
+    :rtype: dict
+    """
+    project_root_path = os.getenv("RECOMMEND_SERVER")
+    cfg = myconfig.get_config('{}/share/project.config'.format(project_root_path))
+    db_ip = cfg['db']['ip']
+    db_port = int(cfg['db']['port'])
+    db_name = cfg['db']['name']
+
+    db_client = MongoClient(db_ip, db_port)
+    db = db_client[db_name]
+
+    col_recommend = db[cfg['db']['col_recommend']]
+
+    result = {}
+    doc_recommend = col_recommend.find_one({"name": book_name, "author": author})
+    if not doc_recommend:
+        db_client.close()
+        return result
+
+    recommend_list = doc_recommend['similar_list']
+    result[book_id] = recommend_list
+
+    return result
+    '''
+    if len(recommend_list) >= 2:
+        #
+    else: 
+        result[book_id] = recommend_list
+    '''

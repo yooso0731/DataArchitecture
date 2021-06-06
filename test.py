@@ -37,12 +37,13 @@ def test_data_collection(logger):
     collected_data = data_collect.crawl_book(logger)
     logger.info('Total -- {} data collected.'.format(len(collected_data)))
     
-    tag_data = data_collect.create_tag(collected_data, logger, using='mecab')
-    
+    tag_data = data_collect.create_tag(collected_data, logger)
+
     if not collected_data:
         return False
     if not tag_data:
         return False
+    
     # show some items
     '''
     for i, b in enumerate(collected_data.items()):
@@ -63,6 +64,7 @@ def test_data_collection(logger):
     #logger.info('DB status (AFTER saving to Collection)')
     #data_collect.show_col(logger)
     return True
+
 
 def test_model(logger):
     from src import mymodel
