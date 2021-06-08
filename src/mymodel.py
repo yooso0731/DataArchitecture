@@ -117,6 +117,11 @@ def run_model1(logger, N=5):
         
     db_client.close()
 
+project_root_path = os.getenv("RECOMMEND_SERVER")
+cfg = myconfig.get_config('{}/share/project.config'.format(project_root_path))
+db_ip = cfg['db']['ip']
+db_port = int(cfg['db']['port'])
+db_name = cfg['db']['name']
 
 def get_service1_result(book_name, author, logger):
     """Get stuff for service 1
@@ -130,25 +135,30 @@ def get_service1_result(book_name, author, logger):
     :return: {book_id: [{sim_book_id: _, score: _, tags: []}]}
     :rtype: dict
     """
-    project_root_path = os.getenv("RECOMMEND_SERVER")
-    cfg = myconfig.get_config('{}/share/project.config'.format(project_root_path))
-    db_ip = cfg['db']['ip']
-    db_port = int(cfg['db']['port'])
-    db_name = cfg['db']['name']
-
     db_client = MongoClient(db_ip, db_port)
     db = db_client[db_name]
-
+    
+    col_book = db[cfg['db']['col_book']]
     col_recommend = db[cfg['db']['col_recommend']]
-
+    
     result = {}
-    doc_recommend = col_recommend.find_one({"name": book_name, "author": author})
+    doc_book = col_book.find_one({"name": book_name, "author": author})
+
+    if not doc_book:
+        db_client.close()
+        logger.info('[Book: {}, Author: {}] -- DB에 없습니다.'.format(book_name, author))
+        return result
+
+    doc_recommend = col_recommend.find_one({"Book": doc_book['_id']})
+    
     if not doc_recommend:
         db_client.close()
+        logger.info('[Book: {}, Author: {}] -- 추천도서가 없습니다.'.format(book_name, author))
         return result
 
     recommend_list = doc_recommend['similar_list']
-    result[book_id] = recommend_list
+    #result[book_id] = recommend_list
+    result = recommend_list
 
     return result
     '''
@@ -157,3 +167,26 @@ def get_service1_result(book_name, author, logger):
     else: 
         result[book_id] = recommend_list
     '''
+
+def get_service2_result(book_name, author, logger):
+    """Get stuff for service2
+
+    """
+    db_client = MongoClient(db_ip, db_port)
+    db = db_client[db_name]
+
+    col_book = db[cfg['db']['col_book']]
+    col_tag = db[cfg['db']['col_tag']]
+
+    doc_book = col_book.find_one({"name": book_name, "author": author})
+    doc_tag = col_tag.find_one({"Book": doc_book['_id']})
+
+    result = {}
+    if not doc_tag:
+        db_client.close()
+        logger.info('[Book: {}, Author: {}] -- DB에 없음'.format(book_name, author))
+        return result
+    else:
+        result = doc_tag['tags']
+        return result
+
