@@ -9,9 +9,9 @@ class model1:
     """Model for service1
     """
     def compute_similarity(self, data, logger, N):
-        """Compute Jaccard Similarities between books, and return topN books
+        """Compute similarities between books, and return topN books
 
-        :param data: dictionary of book tags {book id: [tag1, tag2, ...], ...}
+        :param data: dictionary of book tags {book id: [(tag, score), ...], ...}
         :type data: dict
         :param logger: logger instance
         :type logger: logging.Logger
@@ -20,20 +20,20 @@ class model1:
         :return: dictionary of book tags TopN {book_id: [(similar book_id, score, [same tag list]), ...]}
         :rtype: dict
         """
-        # compute similarities
         total_sim = {}
-        
         book_ids = list(data.keys())
         book_tags = list(data.values())
+        
         for i in range(0, len(book_ids)):
             sim_score = []
-            for ii in range(0, len(book_ids)):
-                if i == ii: continue
+            for ii in range(0, len(book_ids)): 
+                if i == ii: continue 
+                # compute similarities    
                 total_score = 0
                 sum_score = 0
-                #logger.info(book_tags[ii])
                 compare_tags = [tag for (tag, score) in book_tags[ii]]
                 intersection = []
+                
                 for (tag, score) in book_tags[i]:
                     intersection.append(tag)
                     total_score += score
@@ -55,7 +55,7 @@ def run_model1(logger, N=5):
         
     :param logger: logger instance
     :type logger: logging.Logger
-    :param N: # of saving similar book  (default 5)
+    :param N: # of saving similar book (default 5)
     :type N: int
     """
     project_root_path = os.getenv("RECOMMEND_SERVER")
@@ -104,16 +104,16 @@ def run_model1(logger, N=5):
             sim_list = []
             for sim_book_id, score, tags in value:
                 doc_book = col_book.find_one({"_id": sim_book_id})
-                temp = {"name": doc_book["name"],
+                temp = {"name": doc_book["name"], 
                         "author": doc_book["author"],
                         "score": score,
                         "tags": tags}
                 sim_list.append(temp)
-
-            col_recommend.update_one(
-                    {"Book": book_id},
-                    {"$set": {"similar_list": sim_list} })
-            logger.info('{} -- update similar book {}, score: {}'.format(book_id, sim_book_id, score))
+                
+             col_recommend.update_one(
+             {"Book": book_id},
+             {"$set": {"similar_list": sim_list} })
+             logger.info('{} -- update similar book {}, score: {}'.format(book_id, sim_book_id, score))
         
     db_client.close()
 
