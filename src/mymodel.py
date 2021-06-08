@@ -117,9 +117,6 @@ def run_model(logger, N=5):
              {"$set": {"similar_list": sim_list} })
             #logger.info('{} -- update similar book {}, score: {}'.format(book_id, sim_book_id, score))
         
-<<<<<<< HEAD
-    db_client.close()
-=======
     db_client.close()
 
 project_root_path = os.getenv("RECOMMEND_SERVER")
@@ -197,5 +194,3 @@ def get_service2_result(book_name, author, logger):
     else:
         result = doc_tag['tags']
         return result
-
->>>>>>> origin
