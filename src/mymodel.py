@@ -27,7 +27,9 @@ class model1:
         for i in range(0, len(book_ids)):
             sim_score = []
             for ii in range(0, len(book_ids)): 
-                if i == ii: continue 
+                if i == ii:  # same book
+                    continue 
+                    
                 # compute similarities    
                 total_score = 0
                 sum_score = 0
@@ -35,13 +37,14 @@ class model1:
                 intersection = []
                 
                 for (tag, score) in book_tags[i]:
-                    intersection.append(tag)
                     total_score += score
+                    # same tags
                     if tag in compare_tags:
                         sum_score += score
+                        intersection.append(tag)
                         
                 sim = float(sum_score / total_score)
-                sim_score.append((book_ids[ii], sim, intersection))
+                sim_score.append((book_ids[ii], round(sim, 5), intersection))
                 
             sim_score.sort(key = lambda x: -x[1])
             total_sim[book_ids[i]] = sim_score[0:N]
@@ -123,6 +126,7 @@ db_ip = cfg['db']['ip']
 db_port = int(cfg['db']['port'])
 db_name = cfg['db']['name']
 
+
 def get_service1_result(book_name, author, logger):
     """Get stuff for service 1
 
@@ -132,8 +136,8 @@ def get_service1_result(book_name, author, logger):
     :type author: str
     :param logger: logger instance
     :type logger: logging.Logger
-    :return: {book_id: [{sim_book_id: _, score: _, tags: []}]}
-    :rtype: dict
+    :return: [{sim_book_id: _, score: _, tags: []}]
+    :rtype: list
     """
     db_client = MongoClient(db_ip, db_port)
     db = db_client[db_name]
@@ -146,31 +150,33 @@ def get_service1_result(book_name, author, logger):
 
     if not doc_book:
         db_client.close()
-        logger.info('[Book: {}, Author: {}] -- DB에 없습니다.'.format(book_name, author))
+        logger.info('[Book: {}, Author: {}] 해당 도서가 DB에 없습니다.'.format(book_name, author))
         return result
 
     doc_recommend = col_recommend.find_one({"Book": doc_book['_id']})
     
     if not doc_recommend:
         db_client.close()
-        logger.info('[Book: {}, Author: {}] -- 추천도서가 없습니다.'.format(book_name, author))
+        logger.info('[Book: {}, Author: {}] 해당 도서와 유사한 추천 도서가 없습니다.'.format(book_name, author))
         return result
 
     recommend_list = doc_recommend['similar_list']
-    #result[book_id] = recommend_list
     result = recommend_list
 
     return result
-    '''
-    if len(recommend_list) >= 2:
-        #
-    else: 
-        result[book_id] = recommend_list
-    '''
+
 
 def get_service2_result(book_name, author, logger):
     """Get stuff for service2
-
+    
+    :param book_name: book name for search similar book
+    :type book_name: str
+    :param author: book author for search similar book
+    :type author: str
+    :param logger: logger instance
+    :type logger: logging.Logger
+    :return: tags of the search book [('tag', score), ...]
+    :rtype: list
     """
     db_client = MongoClient(db_ip, db_port)
     db = db_client[db_name]
