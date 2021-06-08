@@ -90,8 +90,7 @@ def run_model1(logger, N=5):
             logger.info('Book Id: {} -- Start adding similar book'.format(book_id))
             for sim_book_id, score, tags in value:
                 doc_book = col_book.find_one({"_id": sim_book_id}) # name, author
-                col_recommend.update_one(
-                        {"Book": book_id},
+                col_recommend.update_one({"Book": book_id},
                         {"$push": {"similar_list": {
                             "name": doc_book["name"],
                             "author": doc_book["author"],
@@ -110,10 +109,10 @@ def run_model1(logger, N=5):
                         "tags": tags}
                 sim_list.append(temp)
                 
-             col_recommend.update_one(
+            col_recommend.update_one(
              {"Book": book_id},
              {"$set": {"similar_list": sim_list} })
-             logger.info('{} -- update similar book {}, score: {}'.format(book_id, sim_book_id, score))
+            logger.info('{} -- update similar book {}, score: {}'.format(book_id, sim_book_id, score))
         
     db_client.close()
 
