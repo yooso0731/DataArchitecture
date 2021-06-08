@@ -113,7 +113,7 @@ def run_model1(logger, N=5):
              col_recommend.update_one(
              {"Book": book_id},
              {"$set": {"similar_list": sim_list} })
-             logger.info('{} -- update similar book {}, score: {}'.format(book_id, sim_book_id, score))
+             #logger.info('{} -- update similar book {}, score: {}'.format(book_id, sim_book_id, score))
         
     db_client.close()
 
