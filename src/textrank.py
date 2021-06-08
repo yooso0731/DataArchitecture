@@ -1,6 +1,7 @@
 from sklearn.preprocessing import normalize
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.feature_extraction.text import CountVectorizer
+import numpy as np
 
 class GraphMatrix():
     def __init__(self):

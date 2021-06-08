@@ -143,7 +143,7 @@ def create_tag(book_info, logger, using='mecab', N=15):
         
         try:
             textrank = TextRank(info_sentence)
-            tags = [(tag, round(score, 3)) for tag, score in TextRank(info_sentence).keywords(N).items()]
+            tags = [(tag, round(score, 3)) for tag, score in textrank.keywords(N).items()]
         
             book_tag[k] = tags
             n_book += 1
@@ -184,9 +184,9 @@ def save_to_Book(book_info, logger):
             exist += 1
             #logger.info('[Book: {}, author: {}] already exist, so skipped'.format(name, author))
             
-        logger.info('Insert new data in Book DB -- {}'.format(new_book))
-        logger.info('Already exist in Book DB -- {}'.format(exist))
-        logger.info('Save book informations in Book DB -- Fin!')    
+    logger.info('Insert new data in Book DB -- {}'.format(new_book))
+    logger.info('Already exist in Book DB -- {}'.format(exist))
+    logger.info('Save book informations in Book DB -- Fin!')    
                 
 def save_to_Tag(tag_data, logger):
     """Save the given book tags in Tag Collection

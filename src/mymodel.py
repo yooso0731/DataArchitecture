@@ -31,7 +31,7 @@ class model1:
                 if i == ii: continue
                 total_score = 0
                 sum_score = 0
-                logger.info(book_tags[ii])
+                #logger.info(book_tags[ii])
                 compare_tags = [tag for (tag, score) in book_tags[ii]]
                 intersection = []
                 for (tag, score) in book_tags[i]:
@@ -101,16 +101,19 @@ def run_model1(logger, N=5):
         
         else:
             logger.info('Book Id: {} -- Start changing similar book'.format(book_id))
+            sim_list = []
             for sim_book_id, score, tags in value:
-                doc_book = col_book.find_one({"_id": sim_book_id}) # name, author
-                col_recommend.update_one(
-                {"Book": book_id},
-                {"$set": {"similar_list": {
-                            "name": doc_book["name"],
-                            "author": doc_book["author"],
-                            "score": score, 
-                            "tags": tags}}})
-                logger.info('new similar book {}, score: {}'.format(book_id, sim_book_id, score))
+                doc_book = col_book.find_one({"_id": sim_book_id})
+                temp = {"name": doc_book["name"],
+                        "author": doc_book["author"],
+                        "score": score,
+                        "tags": tags}
+                sim_list.append(temp)
+
+            col_recommend.update_one(
+                    {"Book": book_id},
+                    {"$set": {"similar_list": sim_list} })
+            logger.info('{} -- update similar book {}, score: {}'.format(book_id, sim_book_id, score))
         
     db_client.close()
 
