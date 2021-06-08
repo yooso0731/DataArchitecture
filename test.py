@@ -44,30 +44,13 @@ def test_data_collection(logger):
     if not tag_data:
         return False
     
-    # show some items
-    '''
-    for i, b in enumerate(collected_data.items()):
-        logger.info('{}'.format(b.keys()))
-        if i >= 10:
-            break
-    '''
-    
-    #for k, v in tag_dict.items():
-    #    collected_data[k]['book_tag'] = v['tag']
-    
-    #logger.info('Collection status (BEFORE saving to Collection)')
-    #data_collect.show_col(logger)
-    #logger.info('--------------------------------')
-       # logger.info(all_data.values())
     data_collect.save_to_Book(collected_data, logger)
     data_collect.save_to_Tag(tag_data, logger)    
-    #logger.info('DB status (AFTER saving to Collection)')
-    #data_collect.show_col(logger)
+    
     return True
 
-
+from src import mymodel
 def test_model(logger):
-    from src import mymodel
     mymodel.run_model1(logger)
     logger.info('Finish inserting similar book') 
 
@@ -94,13 +77,16 @@ if __name__ == '__main__':
         if not ret:
             raise Exception('Error when test_data_collection')
         print('Success - test_collection')
+        
+    if not target_step or 'model' in target_step:
+       test_model(logger)
+       print('Success - test_model')    
+    
     '''
     if not target_step or 'show' in target_step:
         show_DB(logger)
         print('Success - test_showDB')
-   '''
-    if not target_step or 'model' in target_step:
-       test_model(logger)
-       print('Success - test_model')
+    '''
+
 
     print('Test completed.')
