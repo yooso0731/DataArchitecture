@@ -7,5 +7,7 @@ else
 		curl -H "Content-type: application/json" -X POST -d '{"book_name":"달러구트 꿈 백화점", "author":"이미예"}' http://127.0.0.1:11100/recommend >> ret
 	elif [ $1 = 'tag' ]; then
 		curl -H "Content-type: application/json" -X POST -d '{"book_name":"달러구트 꿈 백화점", "author":"이미예"}' http://127.0.0.1:11100/tag >> ret
+    elif [ $1 = 'check' ]; then
+		curl -H "Content-type: application/json" -X POST -d '{"book_name":"달러구트 꿈 백화점", "author":"이미예"}' http://127.0.0.1:11100/in_db >> ret
 	fi
 fi

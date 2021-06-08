@@ -51,7 +51,7 @@ def test_data_collection(logger):
 
 from src import mymodel
 def test_model(logger):
-    mymodel.run_model1(logger)
+    mymodel.run_model(logger)
     logger.info('Finish inserting similar book') 
 
 
@@ -79,8 +79,8 @@ if __name__ == '__main__':
         print('Success - test_collection')
         
     if not target_step or 'model' in target_step:
-       test_model(logger)
-       print('Success - test_model')    
+        test_model(logger)
+        print('Success - test_model')    
     
     '''
     if not target_step or 'show' in target_step:
