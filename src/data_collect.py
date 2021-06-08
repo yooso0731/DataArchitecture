@@ -102,7 +102,7 @@ def crawl_book(logger, startPage=1, endPage=5, s_type="best"):
     logger.info('Collect {} Book information in all country categories'.format(len(book_info.keys())))
     return book_info
 
-from textrank import TextRank
+from src.textrank import TextRank
 
 def create_tag(book_info, logger, using='mecab', N=15):
     """Create tags using 'intro'+'p_review' of crawl_book() output 
