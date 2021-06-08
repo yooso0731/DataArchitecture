@@ -123,7 +123,6 @@ def create_tag(book_info, logger, using='mecab', N=15):
     elif using == 'hannanum': using = Hannanum()
     else: using = Okt()
 
-    n_book = 0
     for k, v in book_info.items():
         info_sentence = []
         book_info = v['intro'] + v['p_review']
@@ -146,11 +145,9 @@ def create_tag(book_info, logger, using='mecab', N=15):
             tags = [(tag, round(score, 3)) for tag, score in textrank.keywords(N).items()]
         
             book_tag[k] = tags
-            n_book += 1
+            logger.info('Create tags of [Book id: {}]'.format(k))
         except:
             logger.info('Book id: {} -- No tags'.format(k))
-            
-        logger.info('Create tags of {} Books'.format(n_book))
         
     return book_tag
 
@@ -163,8 +160,6 @@ def save_to_Book(book_info, logger):
     :param logger: logger instance
     :type logger: logging.Logger
     """
-    new_book = 0
-    exist = 0
     for book in book_info.keys():
         # Insert the book information data if not exists.
         name, author = book.split('_')
@@ -173,20 +168,14 @@ def save_to_Book(book_info, logger):
             continue
 
         doc_book = col_book.find_one({"name":name, "author":author})
-        if not doc_book:   
-            new_book += 1
+        if not doc_book: 
             col_book.insert_one({
                 "name": name, "author": author, 
                 "p_date": book_info[book]["p_date"], "intro": book_info[book]["intro"]
                 })
-            #logger.info('[Book: {}, author: {}] add in Book Collection'.format(name, author))
+            logger.info('Insert new data in Book DB -- [Book: {}]'.format(name))
         else:
-            exist += 1
-            #logger.info('[Book: {}, author: {}] already exist, so skipped'.format(name, author))
-            
-    logger.info('Insert new data in Book DB -- {}'.format(new_book))
-    logger.info('Already exist in Book DB -- {}'.format(exist))
-    logger.info('Save book informations in Book DB -- Fin!')    
+            logger.info('Update data in Book DB [Book: {}]'.format(name)) 
                 
 def save_to_Tag(tag_data, logger):
     """Save the given book tags in Tag Collection
@@ -196,8 +185,6 @@ def save_to_Tag(tag_data, logger):
     :param logger: logger instance
     :type logger: logging.Logger
     """
-    new_tag = 0
-    update_tag = 0
     
     for book, tags in tag_data.items():
         name, author = book.split('_')
@@ -208,20 +195,13 @@ def save_to_Tag(tag_data, logger):
         doc_tag = col_tag.find_one({"Book": doc_book['_id']})
         
         if not doc_tag:
-            new_tag += 1
             col_tag.insert_one({"Book": doc_book['_id'], "tags": tags})
-            #logger.info('[Book: {}, {} tags] in Tag Collection'.format(doc_book['_id'], len(tags)))
+            logger.info('Insert new data in Tag DB -- [Book: {}]'.format(name))
         else:
-            update_tag += 1
             col_tag.update_one({"Book": doc_book['_id']},
                     {"$set": {"tags": tags}
                     })
-            #logger.info('[Book: {}, {} tags] Update'.format(doc_book['_id'], len(tags)))
-            
-        logger.info('Insert new data in Tag DB -- {}'.format(new_tag))
-        logger.info('Update data of Tag DB -- {}'.format(update_tag))
-        logger.info('Save tags in Tag DB -- Fin!')
-        
+            logger.info('Update data in Tag DB [Book: {}]'.format(name))        
         
 '''                
 def show_DB(logger, limit=5):
