@@ -23,6 +23,7 @@ db = db_client[db_name]
 col_book = db[cfg['db']['col_book']]
 col_tag = db[cfg['db']['col_tag']]
 
+
 def crawl_book(logger, startPage=1, endPage=5, s_type="best"):
     """Collect data from www.yes24.com
     
@@ -101,114 +102,23 @@ def crawl_book(logger, startPage=1, endPage=5, s_type="best"):
     logger.info('Collect {} Book information in all country categories'.format(len(book_info.keys())))
     return book_info
 
-'''
-def create_tag(book_info, logger, using='mecab'):
+from textrank import TextRank
+
+def create_tag(book_info, logger, using='mecab', N=15):
     """Create tags using 'intro'+'p_review' of crawl_book() output 
     
-    :param book_info: pairs of {'book name_author': {"p_date": "...", "intro": "...", "p_review": "..."}}
+    :param book_info: dictionary of {'book name_author': {"p_date": "...", "intro": "...", "p_review": "..."}, ...}
     :type book_info: dict
     :param logger: logger instance
     :type logger: logging.Logger
     :param using: use konlpy.tag name, choice=['mecab', 'hannanum', 'okt']
     :type using: str 
-    :return: pairs of {"book name_author": ["tag1", "tag2", ...]}
+    :return: dictionary of {"book name_author": [("tag1", "score"), ...]}
     :rtype: dict
-    """  
-    logger.info('Get {} book info'.format(len(book_info.keys())))
-    book_tag = {}
-
-    if using == 'mecab':
-        using = Mecab()
-    elif using == 'hannanum':
-        using = Hannanum()
-    else:
-        using = Okt()
-    
-    n_book = 0
-    for k, v in book_info.items():
-        book_info = v['intro'] + v['p_review']
-        
-        # extract korean
-        cleans = re.sub('[^가-힣 ]', ' ', str(book_info))
-        # extract nouns
-        data_nouns = using.nouns(cleans)  
-        
-        frequency = collections.Counter(data_nouns)
-        # extract tags
-        temp = [int(f_v) for f_v in frequency.values()]
-        if len(temp) >= 10:
-            temp.sort(reverse=True)
-            threshold = temp[9]
-        else: 
-            threshold = 2
-        tags = [f_k for f_k, f_v in frequency.items() if f_v >= threshold]
-        
-        book_tag[k] = tags
-        n_book += 1
-
-    logger.info('Create tags of {} books'.format(n_book))
-    return book_tag
-'''
-from sklearn.preprocessing import normalize
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.feature_extraction.text import CountVectorizer
-
-class GraphMatrix():
-    def __init__(self):
-        self.tfidf = TfidfVectorizer()
-        self.cnt_vec = CountVectorizer()
-        self.graph_sentence = []
-
-    def build_words_graph(self, sentence):
-        cnt_vec_mat = normalize(self.cnt_vec.fit_transform(sentence).toarray().astype(float), axis=0)
-        vocab = self.cnt_vec.vocabulary_
-        return np.dot(cnt_vec_mat.T, cnt_vec_mat), {vocab[word]: word for word in vocab}
-
-class Rank():
-    def get_ranks(self, graph, d=0.85):
-        A = graph
-        matrix_size = A.shape[0]
-        # tf-idf
-        for id in range(matrix_size):
-            A[id, id] = 0
-            link_sum = np.sum(A[:, id])
-            if link_sum != 0:
-                A[:, id] /= link_sum
-            A[:, id] *= -d
-            A[id, id] = 1
-
-        B = (1-d) * np.ones((matrix_size, 1))
-        ranks = np.linalg.solve(A, B)
-        return {idx: r[0] for idx, r in enumerate(ranks)}
-
-
-class TextRank():
-    def __init__(self, text):
-        # text: 명사 추출 끝난 문장 (list of str type)
-        self.nouns = text
-        self.graph_matrix = GraphMatrix()
-        self.words_graph, self.idx2word = self.graph_matrix.build_words_graph(
-            self.nouns)
-
-    def keywords(self, word_num=10):
-        rank = Rank()
-        rank_idx = rank.get_ranks(self.words_graph)  # rank_idx == index : rank
-        sorted_rank_idx = sorted(
-            rank_idx, key=lambda k: rank_idx[k], reverse=True)
-
-        keywords = {}
-        index = []
-        for idx in sorted_rank_idx[:word_num]:
-            index.append(idx)
-
-        for idx in index:
-            keywords[self.idx2word[idx]] = rank_idx[idx]
-
-        return keywords
-
-def create_tag(book_info, logger, using='mecab', N=15):
+    """
     stopwords = ['소설', '소설가', '문학', '평론가']
     book_tag = {}
+
     if using == 'mecab': using = Mecab()
     elif using == 'hannanum': using = Hannanum()
     else: using = Okt()
@@ -218,10 +128,11 @@ def create_tag(book_info, logger, using='mecab', N=15):
         info_sentence = []
         book_info = v['intro'] + v['p_review']
 
-        #stopwords
+        # delete stopwords
         for word in stopwords:
             book_info = re.sub(word, '', book_info)
-
+        
+        # split sentences
         sentences = book_info.split('.')
         [info_sentence.append(s.strip()) for s in sentences if s]
 
@@ -237,8 +148,9 @@ def create_tag(book_info, logger, using='mecab', N=15):
             book_tag[k] = tags
             n_book += 1
         except:
-            tags = 'None tags'
-        logger.info('{}-- tags: {}'.format(k, tags))
+            logger.info('Book id: {} -- No tags'.format(k))
+            
+        logger.info('Create tags of {} Books'.format(n_book))
         
     return book_tag
 
@@ -251,6 +163,8 @@ def save_to_Book(book_info, logger):
     :param logger: logger instance
     :type logger: logging.Logger
     """
+    new_book = 0
+    exist = 0
     for book in book_info.keys():
         # Insert the book information data if not exists.
         name, author = book.split('_')
@@ -260,23 +174,31 @@ def save_to_Book(book_info, logger):
 
         doc_book = col_book.find_one({"name":name, "author":author})
         if not doc_book:   
+            new_book += 1
             col_book.insert_one({
                 "name": name, "author": author, 
                 "p_date": book_info[book]["p_date"], "intro": book_info[book]["intro"]
                 })
-            logger.info('[Book: {}, author: {}] add in Book Collection'.format(name, author))
+            #logger.info('[Book: {}, author: {}] add in Book Collection'.format(name, author))
         else:
-            logger.info('[Book: {}, author: {}] already exist, so skipped'.format(name, author))
-
+            exist += 1
+            #logger.info('[Book: {}, author: {}] already exist, so skipped'.format(name, author))
+            
+        logger.info('Insert new data in Book DB -- {}'.format(new_book))
+        logger.info('Already exist in Book DB -- {}'.format(exist))
+        logger.info('Save book informations in Book DB -- Fin!')    
                 
 def save_to_Tag(tag_data, logger):
     """Save the given book tags in Tag Collection
     
-    :param book_info: {book name_author: [tags]} pairs
+    :param book_info: {book name_author: [(tag, score), ...]} pairs
     :type book_info: dict
     :param logger: logger instance
     :type logger: logging.Logger
     """
+    new_tag = 0
+    update_tag = 0
+    
     for book, tags in tag_data.items():
         name, author = book.split('_')
         
@@ -286,15 +208,21 @@ def save_to_Tag(tag_data, logger):
         doc_tag = col_tag.find_one({"Book": doc_book['_id']})
         
         if not doc_tag:
+            new_tag += 1
             col_tag.insert_one({"Book": doc_book['_id'], "tags": tags})
-            logger.info('[Book: {}, {} tags] in Tag Collection'.format(doc_book['_id'], len(tags)))
+            #logger.info('[Book: {}, {} tags] in Tag Collection'.format(doc_book['_id'], len(tags)))
         else:
+            update_tag += 1
             col_tag.update_one({"Book": doc_book['_id']},
-                    {"$set": 
-                        {"tags": tags}
-                        })
-            logger.info('[Book: {}, {} tags] Update'.format(doc_book['_id'], len(tags)))
-
+                    {"$set": {"tags": tags}
+                    })
+            #logger.info('[Book: {}, {} tags] Update'.format(doc_book['_id'], len(tags)))
+            
+        logger.info('Insert new data in Tag DB -- {}'.format(new_tag))
+        logger.info('Update data of Tag DB -- {}'.format(update_tag))
+        logger.info('Save tags in Tag DB -- Fin!')
+        
+        
 '''                
 def show_DB(logger, limit=5):
     """Show book data in Book and Tag Collection.
