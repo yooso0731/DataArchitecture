@@ -1,15 +1,19 @@
-import requests
-from bs4 import BeautifulSoup as bs
-from pymongo import MongoClient
-import pdb
-from tqdm import tqdm
-from src import myconfig
 import os
+import pdb
 import re
-from konlpy.tag import Hannanum, Okt, Mecab
-import collections
-import numpy as np
+from tqdm import tqdm
 
+from bs4 import BeautifulSoup as bs
+import collections
+from konlpy.tag import Hannanum, Okt, Mecab
+import numpy as np
+from pymongo import MongoClient
+import requests
+
+from src.textrank import TextRank
+from src import myconfig
+
+# DB
 project_root_path = os.getenv("RECOMMEND_SERVER")
 cfg = myconfig.get_config('{}/share/project.config'.format(project_root_path))
 
@@ -38,11 +42,10 @@ def crawl_book(logger, startPage=1, endPage=5, s_type="best"):
     :return: pairs of {book name_author: {book info...}}
     :rtype: dict
     """
-   
     s_type = "04" if s_type == "new" else "05"
     country = 1 # book country code (1~10)
     c_category = ['한국', '영미', '일본', '중국', '프랑스', '독일', '러시아', '스페인, 중남미', '북유럽', 'etc']
-    del_pattern = "\[.*\]|\(.*\)|\s-\s.*" # delete pattern in book name(title)
+    del_pattern = "\[.*\]|\(.*\)|\s-\s.*" # delete pattern in book name
     
     book_info = {}
     n_got = 0
@@ -63,7 +66,7 @@ def crawl_book(logger, startPage=1, endPage=5, s_type="best"):
                 break
                 
             for index in range(len(book_list)):
-                if not book_list[index].text:
+                if not book_list[index].text:  # if book name is empty
                     continue
                 
                 name = re.sub(del_pattern, '', book_list[index].text).strip()
@@ -102,8 +105,6 @@ def crawl_book(logger, startPage=1, endPage=5, s_type="best"):
     logger.info('Collect {} Book information in all country categories'.format(len(book_info.keys())))
     return book_info
 
-from src.textrank import TextRank
-
 def create_tag(book_info, logger, using='mecab', N=15):
     """Create tags using 'intro'+'p_review' of crawl_book() output 
     
@@ -113,7 +114,7 @@ def create_tag(book_info, logger, using='mecab', N=15):
     :type logger: logging.Logger
     :param using: use konlpy.tag name, choice=['mecab', 'hannanum', 'okt']
     :type using: str 
-    :return: dictionary of {"book name_author": [("tag1", "score"), ...]}
+    :return: dictionary of {"book name_author": [("tag1", score), ...]}
     :rtype: dict
     """
     stopwords = ['소설', '소설가', '문학', '평론가']
