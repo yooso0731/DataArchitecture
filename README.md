@@ -26,10 +26,10 @@ YES24 페이지 내 국내-소설/시/희곡 분야 베스트셀러
 (http://www.yes24.com/24/Category/Display/001001046)   
     
 - 진행 프레임워크
-1. (베스트셀러/신작) 데이터 수집
-2. 형태소 분석, 빈도 분석을 이용하여 도서별 주제 태그 생성
-3. 도서간 자카드 유사도 계산
-4. 사용자에게 입력받은 도서와 유사한 도서 TopN개 출력
+  1. (베스트셀러/신작) 데이터 수집
+  2. 형태소 분석, 빈도 분석을 이용하여 도서별 주제 태그 생성
+  3. 도서간 자카드 유사도 계산
+  4. 사용자에게 입력받은 도서와 유사한 도서 TopN개 출력
 
 #### Purpose
 
@@ -48,7 +48,9 @@ YES24 페이지 내 국내-소설/시/희곡 분야 베스트셀러
 * konlpy
 
 #### How to install
-
+* mongoDB: 공식 홈페이지 내용을 참고하여 설치하기를 권장함   
+  (https://docs.mongodb.com/manual/installation/)   
+  
 * konlpy: 운영체제에 맞게 공식 페이지 내용 참고해서 진행하기를 권장함    
 (https://konlpy-ko.readthedocs.io/ko/v0.4.3/install/)   
 만약 ubuntu 운영체제라면 Mecab 설치까지 진행
@@ -99,6 +101,13 @@ python3 {project_dir}/service/run.py
 {project_dir}/test.sh recommend
 
 ```
+
+- 웹 페이지
+```
+python3 {project_dir}/service/run.py
+```
+after server run, enter '{IP:11100}' (IP:PORT).
+
 ---
 
 ### Version History
