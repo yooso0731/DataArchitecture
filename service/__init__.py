@@ -21,12 +21,12 @@ loggers['check'] = mylogger.get_logger('check', log_directory)
 
 @app.route("/recommend", methods=["POST"])
 def recommend():
-    """recommend book API function
+    """get_recommend API function
 
     Specification can be found in `wiki` tab
 
-    :return: JSON serialized string contatiningthe result with recommend book
-    :rtype: str
+    :return: {"result": T/F, "msg": dictionary of similar book infomation or message}
+    :rtype: dictionary
     """
     
     book_name = request.json.get('book_name')
@@ -36,7 +36,6 @@ def recommend():
     ret = {"result": None,
             "msg": ""}
 
-    #isit = RecommendList 들어가서 name, author에 해당하는 document있는 지 확인, 출력하는 함수 생성 후 여기서 호출
     sim_result = myapi.get_recommend(book_name, author, loggers['recommend'])
     if not sim_result:
         ret["result"] = False
@@ -45,18 +44,17 @@ def recommend():
     else:
         ret["result"] = True
         ret["msg"] = sim_result
-       # loggers['recommend'].info('[service1 result] Similar book list: {}'.format(ret['msg']))
        
     return ret
 
 @app.route('/tag', methods=["POST"])
 def tag():
-    """ tag API function.
+    """ get_tags API function.
 
     Specification can be found in `wiki` tab
 
-    :return: JSON serialized string containing rags of a book
-    :rtype: str
+    :return: {"result": T/F, "get_tag": []}
+    :rtype: dictionary
     """
     book_name = request.json.get('book_name')
     author = request.json.get('author')
@@ -81,7 +79,7 @@ def in_db():
 
     Specification can be found in `wiki` tab
 
-    :return: JSON serialized string containing rags of a book
+    :return: {"result": T/F, "msg": ".."}
     :rtype: str
     """
     book_name = request.json.get('book_name')
@@ -106,20 +104,8 @@ def in_db():
 def main():
     return render_template("index.html")
 
-
 @app.route("/search-book", methods=["POST"])
 def search_book():
-    '''
-    name = request.values.get("book_name")
-    author = request.values.get("author")
-    #console.log(name)
-    return render_template("search_failed.html")
-    '''
-    """recommend book API function
-    Specification can be found in 'wiki' tab
-    """
-
-    
     book_name = request.values.get("book_name")
     author = request.values.get("author")
 
@@ -130,24 +116,12 @@ def search_book():
     if not sim_result:
         ret["result"] = False
         ret["msg"] = "입력한 도서가 DB에 없습니다."
-        #loggers['recommend'].info(ret['msg'])
         
     else:
         ret["result"] = True
         ret["msg"] = sim_result
         
     loggers["recommend"].info(len(sim_result))
-    ## value 만들어서 넘기기
-    '''
-    fin_result = {}
-    for i in range(len(sim_result)):
-        fin_result[i] = {"name": sim_result[i]['name'],
-                    "author": sim_result[i]['author'],
-                    "score": sim_result[i]['score'],
-                    "tags": sim_result[i]['tags']}
-    '''
-    #loggers["recommend"].info(ret["msg"])
-    #return render_template("search_failed.html")
 
     if not ret["result"]:
         return render_template("search_failed.html")
