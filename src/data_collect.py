@@ -178,6 +178,7 @@ def save_to_Book(book_info, logger):
         else:
             logger.info('Update data in Book DB [Book: {}]'.format(name)) 
                 
+                
 def save_to_Tag(tag_data, logger):
     """Save the given book tags in Tag Collection
     
@@ -203,21 +204,3 @@ def save_to_Tag(tag_data, logger):
                     {"$set": {"tags": tags}
                     })
             logger.info('Update data in Tag DB [Book: {}]'.format(name))        
-        
-'''                
-def show_DB(logger, limit=5):
-    """Show book data in Book and Tag Collection.
-    
-    :param logger: logger instance
-    :type logger: logging.Logger
-    :param limit: maximum # of items to show (default 10)
-    :type limit: int
-    """
-    for i, b in enumerate(col_book.find({})):
-        if i == limit:
-            break
-        logger.info(b)
-        #tags = col_tag.find_one({"Book": b["_id"]})["tags"]
-        #logger.info('Book: {}, author: {}, tags: {}'.format(b['name'], b['author'], tags))
-   
-'''
