@@ -44,6 +44,7 @@ def test_config(project_path=""):
 
 from src import data_collect
 def test_data_collection(logger):
+    """Data collection."""
     collected_data = data_collect.crawl_book(logger, startPage=1, endPage=1)
     logger.info('Total -- {} data collected.'.format(len(collected_data)))
     
@@ -61,6 +62,7 @@ def test_data_collection(logger):
 
 from src import mymodel
 def test_model(logger):
+    """Save similar books. """ 
     mymodel.run_model(logger)
     logger.info('Finish inserting similar book') 
 
