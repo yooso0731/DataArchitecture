@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8">
+    <title>DA_20171482</title>
+  </head>
+  <body>
+    <div id="title">
+      <h2><center>내용 유사도 기반 도서 추천 페이지</center></h2>
+      <br><hr><br>
+    </div>
+
+    <div id="search">
+	    {% block content %}
+      <center>
+        <form method="post" enctype="multipart/from-data" action="/search-book">
+            도서명: <input type="text" placeholder="ex) 아몬드" autofocus size=20 id="book_name" name="book_name">
+            저자: <input type="text" placeholder="ex) 손원평" size=10 id="author" name="author">&nbsp;
+            <input type="submit" value="검색" id="search_button" name="search_button"/>
+        </form>
+      </center>
+    <br>
+    <hr>
+
+<div class="content cotainer" id="result">
+	<h4><center>[도서명 및 저자를 입력하면 내용 유사도 기준으로 추천 도서가 정렬되어 나타납니다.]</center></h4>
+
+</div>
+{% endblock %}
+    </div>
+  </body>
+</html>

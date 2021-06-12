@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html long='ko-KR'>
+	<head>
+		<meta charset="UTF-8">
+		<title>DA_20171482</title>
+	</head>
+	<body>
+		<div id="title">
+			<h2><center>도서 추천 목록</center></h2>
+			<br><hr><br>
+		</div>
+		<div id="result" style="margin: auto;">
+		</div>
+	</body>	
+<script src="{{url_for('static', filename='jquery-1.12.4.min.js')}}"></script>
+<script src="{{url_for('static', filename='jquery-ui.js')}}"></script>
+<script type="text/javascript">
+
+var sim_info = '{{ sim_info|safe }}';
+console.log(sim_info);
+var sim_json = JSON.parse(sim_info);
+console.log(sim_json);
+//console.log(sim_info_json['0']);
+if(sim_json['result'] == true){
+	console.log((sim_json['msg']['0']['score']*100).toFixed(2))}
+
+//function recommend(sim_json){
+if(sim_json['result'] == true){
+
+    var table_html = '<table border="2">' +
+      '<th> 순위</th>' +
+      '<th> 도서명</th>' +
+      '<th> 저자</th>' +
+      '<th> 유사도</th>' +
+      '<th> 동일 태그</th>';//+
+      //'<th> Info</th>';
+
+    for(var i=0; i < sim_json['msg'].length; i++){
+      var num = i+1;
+      var name = sim_json['msg'][i]['name'];
+      var author = sim_json['msg'][i]['author'];
+      var sim_score = (sim_json['msg'][i]['score']*100).toFixed(2);
+      var tag = sim_json['msg'][i]['tags'];
+
+      table_html += '<tr>';
+      table_html += '<td>' + num + '</td>';
+      table_html += '<td>' + name + '</td>';
+      table_html += '<td>' + author + '</td>';
+      table_html += '<td>' + sim_score + '</td>';
+      table_html += '<td>' + tag + '</td>';
+      //table_html += '<td><button onclick="goto_info(\" + name + "," + author + "\)"상세 정보</button></td>';
+    }
+    table_html += '</table>';
+    $("#result").html(table_html);
+  }
+//}
+
+/*function refresh(event){
+  $.ajax({
+    url: "http://13.124.165.226:11100/result", //서버 경로 확인
+    method: "POST",
+    contentType: "application/json",
+    // data:SON.stringify({})
+    dataType: "json",
+    success: recommend
+  });
+}
+
+function goto_info(name, author){
+  //?
+}
+
+$(window).on("load", refresh(event));
+*/
+
+</script>
+</html>

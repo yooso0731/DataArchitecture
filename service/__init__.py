@@ -1,7 +1,9 @@
 # -- coding: utf-8 --
 
-from flask import Flask
+from flask import Flask, render_template
 from flask import request
+from bson import json_util
+import json
 import os
 from src import mylogger, myconfig, myapi
 import pdb
@@ -98,3 +100,58 @@ def in_db():
         loggers['check'].info(ret['msg'])
      
     return ret
+
+
+@app.route('/')
+def main():
+    return render_template("index.html")
+
+
+@app.route("/search-book", methods=["POST"])
+def search_book():
+    '''
+    name = request.values.get("book_name")
+    author = request.values.get("author")
+    #console.log(name)
+    return render_template("search_failed.html")
+    '''
+    """recommend book API function
+    Specification can be found in 'wiki' tab
+    """
+
+    
+    book_name = request.values.get("book_name")
+    author = request.values.get("author")
+
+    ret = {"result": None, "msg": ""}
+   # return ret
+
+    sim_result = myapi.get_recommend(book_name, author, loggers['recommend'])
+    if not sim_result:
+        ret["result"] = False
+        ret["msg"] = "입력한 도서가 DB에 없습니다."
+        #loggers['recommend'].info(ret['msg'])
+        
+    else:
+        ret["result"] = True
+        ret["msg"] = sim_result
+        
+    loggers["recommend"].info(len(sim_result))
+    ## value 만들어서 넘기기
+    '''
+    fin_result = {}
+    for i in range(len(sim_result)):
+        fin_result[i] = {"name": sim_result[i]['name'],
+                    "author": sim_result[i]['author'],
+                    "score": sim_result[i]['score'],
+                    "tags": sim_result[i]['tags']}
+    '''
+    #loggers["recommend"].info(ret["msg"])
+    #return render_template("search_failed.html")
+
+    if not ret["result"]:
+        return render_template("search_failed.html")
+    
+    ret_json = json.dumps(ret, ensure_ascii=False)
+    
+    return render_template("result.html", sim_info=ret_json)
