@@ -20,11 +20,9 @@ var sim_info = '{{ sim_info|safe }}';
 console.log(sim_info);
 var sim_json = JSON.parse(sim_info);
 console.log(sim_json);
-//console.log(sim_info_json['0']);
 if(sim_json['result'] == true){
 	console.log((sim_json['msg']['0']['score']*100).toFixed(2))}
 
-//function recommend(sim_json){
 if(sim_json['result'] == true){
 
     var table_html = '<table border="2">' +
@@ -53,25 +51,6 @@ if(sim_json['result'] == true){
     table_html += '</table>';
     $("#result").html(table_html);
   }
-//}
-
-/*function refresh(event){
-  $.ajax({
-    url: "http://13.124.165.226:11100/result", //서버 경로 확인
-    method: "POST",
-    contentType: "application/json",
-    // data:SON.stringify({})
-    dataType: "json",
-    success: recommend
-  });
-}
-
-function goto_info(name, author){
-  //?
-}
-
-$(window).on("load", refresh(event));
-*/
 
 </script>
 </html>
