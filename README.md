@@ -73,9 +73,32 @@ pip3 install -r requirements.txt
 export RECOMMEND_SERVER=~/DataArchitecture
 export PYTHONPATH=$PATHONPATH:$RECOMMEND_SERVER
 ```
+- MongoDB 구축   
+![image](https://user-images.githubusercontent.com/70804327/121789410-ba2d3500-cc10-11eb-8f0d-6d6ceb92394d.png)
 
-TODO
+- 데이터 적재
+```
+* YES24 국내 소설 베스트 셀러 200권씩 나라별로 크롤링 후 Book, Tag DB에 정보 적재
+python3 {project_dir}/test.py data
 
+* 유사도 계산 후 추천 도서 목록 RecommendList에 저장
+python3 {project_dir}/test.py model
+```
+
+- Test API
+```
+python3 {project_dir}/service/run.py
+
+* Book_in_DB api
+{project_dir}/test.sh check
+
+* get_tag api
+{project_dir}/test.sh tag
+
+* get_recommend api
+{project_dir}/test.sh recommend
+
+```
 ---
 
 ### Version History
