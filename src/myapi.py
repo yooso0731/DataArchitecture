@@ -48,6 +48,7 @@ def get_recommend(book_name, author, logger):
     recommend_list = doc_recommend['similar_list']
     result = recommend_list
     db_client.close()
+    
     return result
 
 
